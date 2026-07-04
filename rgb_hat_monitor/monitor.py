@@ -300,7 +300,7 @@ def apply_fan(on: bool):
 
     with state_lock:
         state["fan_on"] = on
-        state["fan_percentage"] = percentage if on else 0
+        state["fan_percentage"] = 100 if on else 0
     publish_fan_state()
 
 
