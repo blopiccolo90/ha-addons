@@ -165,17 +165,6 @@ def get_ram_usage() -> float:
 def update_oled(cpu_load, cpu_temp, ram_usage):
     pass
 
-def update_oled(cpu_load, cpu_temp, ram_usage):
-    try:
-        draw.rectangle((0, 0, disp.width, disp.height), outline=0, fill=0)
-        draw.text((0, -2), f"CPU:{cpu_load}%", font=font, fill=255)
-        draw.text((56, -2), f"Temp:{cpu_temp}C", font=font, fill=255)
-        draw.text((0, 12), f"RAM:{ram_usage}%", font=font, fill=255)
-        oled.image(image)
-        oled.show()
-    except Exception as e:
-        log.error("Errore aggiornamento OLED: %s", e)
-
 # --------------------------------------------------------------------------
 # Stato condiviso
 # --------------------------------------------------------------------------
