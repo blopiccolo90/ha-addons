@@ -88,11 +88,14 @@ EFFECTS_REVERSE = {v: k for k, v in EFFECTS.items()}
 
 
 def set_fan_speed(byte_value: int):
+    log.info("Scrivo ventola: %d", byte_value)
+
     with i2c_lock:
         try:
             bus.write_byte_data(HAT_ADDR, FAN_REG, byte_value & 0xFF)
+            log.info("Ventola scritta")
         except Exception as e:
-            log.error("Errore scrittura fan: %s", e)
+            log.error("Errore ventola: %s", e)
 
 
 def set_rgb_effect(byte_value: int):
