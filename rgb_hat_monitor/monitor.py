@@ -289,6 +289,7 @@ def publish_light_state():
 
 def apply_fan(on: bool, percentage: int):
     byte_value = round(percentage * 255 / 100) if on else 0x00
+    log.info("Setto byte_value"+str(byte_value))
     set_fan_speed(byte_value)
     with state_lock:
         state["fan_on"] = on
@@ -388,8 +389,10 @@ def main_loop():
             auto_fan = state["auto_fan"]
         if auto_fan:
             if cpu_temp >= T_MAX_RANGE:
+                log.info("Setto apply_fan(True, 100)")
                 apply_fan(True, 100)
             elif cpu_temp <= T_MIN_RANGE:
+                log.info("Setto apply_fan(False, 0)")
                 apply_fan(False, 0)
         else:
             if cpu_temp >= T_MAX_RANGE:
