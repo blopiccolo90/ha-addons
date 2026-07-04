@@ -1,4 +1,4 @@
-FROM ghcr.io/hassio-addons/base:15.0.4
+FROM ghcr.io/hassio-addons/base:latest
 
 # Pacchetti di sistema: python3, accesso i2c, font per l'OLED
 # apk update + upgrade evita conflitti di versione tra musl (gia' nell'immagine
