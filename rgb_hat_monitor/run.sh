@@ -13,4 +13,18 @@ export OLED_ENABLED=$(bashio::config 'oled_enabled')
 bashio::log.info "Avvio RGB Hat Monitor..."
 bashio::log.info "MQTT broker: ${MQTT_HOST}:${MQTT_PORT}"
 
+echo "===================="
+echo "DEV"
+ls -l /dev
+
+echo "===================="
+echo "I2C"
+ls -l /dev/i2c* || true
+
+echo "===================="
+echo "SYS"
+find /sys/bus/i2c
+
+echo "===================="
+
 exec python3 /monitor.py
