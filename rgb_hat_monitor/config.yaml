@@ -11,8 +11,11 @@ init: false
 boot: auto
 startup: application
 host_network: true
+full_access: true
 devices:
   - /dev/i2c-1
+  - /dev/i2c-20
+  - /dev/i2c-21
 privileged:
   - SYS_RAWIO
 options:
