@@ -51,7 +51,6 @@ MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "") or None
 SLEEP_TIME = int(os.environ.get("SLEEP_TIME", "60"))
 T_MIN_RANGE = float(os.environ.get("T_MIN_RANGE", "35"))
 T_MAX_RANGE = float(os.environ.get("T_MAX_RANGE", "65"))
-UPS_NAME = os.environ.get("UPS_NAME", "tecnoware")
 OLED_ENABLED = os.environ.get("OLED_ENABLED", "true").lower() == "true"
 
 logging.basicConfig(
@@ -68,7 +67,22 @@ RGB_EFFECT_REG = 0x04
 FAN_REG = 0x08
 RGB_OFF_REG = 0x07
 
-bus = SMBus(1)
+#bus = SMBus(1)
+
+from smbus2 import SMBus
+import os
+
+for bus_id in (1, 20, 21):
+    try:
+        if os.path.exists(f"/dev/i2c-{bus_id}"):
+            print(f"Uso I2C bus {bus_id}")
+            bus = SMBus(bus_id)
+            break
+    except Exception:
+        pass
+else:
+    raise RuntimeError("Nessun bus I2C disponibile")
+
 i2c_lock = threading.Lock()
 
 EFFECTS = {
@@ -156,22 +170,6 @@ def get_ram_usage() -> float:
         return 0.0
 
 
-def get_ups_battery():
-    try:
-        cmd = f"upsc {UPS_NAME} battery.charge"
-        out = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
-        return float(out.decode().strip())
-    except Exception:
-        return None
-
-
-def get_uptime() -> str:
-    try:
-        return subprocess.check_output(["uptime", "-p"]).decode().strip()
-    except Exception as e:
-        log.error("Errore lettura uptime: %s", e)
-        return "unknown"
-
 
 # --------------------------------------------------------------------------
 # OLED (opzionale)
@@ -195,22 +193,18 @@ elif OLED_ENABLED and not OLED_AVAILABLE:
     log.warning("Librerie OLED non installate: display disabilitato")
 
 
-def update_oled(cpu_load, cpu_temp, ram_usage, ups_battery, uptime):
+def update_oled(cpu_load, cpu_temp, ram_usage):
     if oled is None:
         return
     try:
         draw.rectangle((0, 0, disp.width, disp.height), outline=0, fill=0)
         draw.text((0, -2), f"CPU:{cpu_load}%", font=font, fill=255)
         draw.text((56, -2), f"Temp:{cpu_temp}C", font=font, fill=255)
-        draw.text((0, 6), f"RAM USAGE = {ram_usage}%", font=font, fill=255)
-        ups_txt = f"{ups_battery}%" if ups_battery is not None else "unknown"
-        draw.text((0, 14), f"UPS = {ups_txt}", font=font, fill=255)
-        draw.text((0, 22), f"UPTIME={uptime}", font=font_small, fill=255)
+        draw.text((0, 12), f"RAM:{ram_usage}%", font=font, fill=255)
         oled.image(image)
         oled.show()
     except Exception as e:
         log.error("Errore aggiornamento OLED: %s", e)
-
 
 # --------------------------------------------------------------------------
 # Stato condiviso
@@ -249,8 +243,6 @@ def publish_discovery():
         ("cpu_load", "CPU Load", "%", None),
         ("cpu_temp", "CPU Temperature", "°C", "temperature"),
         ("ram_usage", "RAM Usage", "%", None),
-        ("ups_battery", "UPS Battery", "%", "battery"),
-        ("uptime", "Uptime", None, None),
     ]
     for object_id, name, unit, device_class in sensors:
         payload = {
@@ -434,17 +426,11 @@ def main_loop():
         cpu_load = get_cpu_load_rate()
         cpu_temp = get_cpu_temp()
         ram_usage = get_ram_usage()
-        ups_battery = get_ups_battery()
-        uptime = get_uptime()
 
         client.publish(f"{BASE}/sensor/cpu_load/state", cpu_load)
         client.publish(f"{BASE}/sensor/cpu_temp/state", cpu_temp)
         client.publish(f"{BASE}/sensor/ram_usage/state", ram_usage)
-        if ups_battery is not None:
-            client.publish(f"{BASE}/sensor/ups_battery/state", ups_battery)
-        client.publish(f"{BASE}/sensor/uptime/state", uptime)
-
-        update_oled(cpu_load, cpu_temp, ram_usage, ups_battery, uptime)
+        update_oled(cpu_load, cpu_temp, ram_usage)
 
         # Sicurezza termica: se auto_fan e' attivo, gestisce la ventola
         # in base alle soglie configurate (indipendentemente dal comando manuale).
@@ -474,8 +460,8 @@ def main_loop():
             apply_light(True, effect)
 
         logging.info(
-            "CPU:%s%% Temp:%.1fC RAM:%s%% UPS:%s Uptime:%s FanOn:%s FanPct:%s RGB:%s",
-            cpu_load, cpu_temp, ram_usage, ups_battery, uptime,
+            "CPU:%s%% Temp:%.1fC RAM:%s%% FanOn:%s FanPct:%s RGB:%s",
+            cpu_load, cpu_temp, ram_usage,
             state["fan_on"], state["fan_percentage"], state["rgb_effect"],
         )
 
