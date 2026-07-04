@@ -287,14 +287,22 @@ def publish_light_state():
     client.publish(f"{BASE}/switch/rgb_auto_cycle/state", "ON" if cycle else "OFF", retain=True)
 
 
-def apply_fan(on: bool, percentage: int):
-    byte_value = round(percentage * 255 / 100) if on else 0x00
-    log.info("Setto byte_value"+str(byte_value))
-    set_fan_speed(byte_value)
+
+def apply_fan(on: bool):
+    with i2c_lock:
+        try:
+            if on:
+               bus.write_byte_data(HAT_ADDR, FAN_REG, 0x01)
+            else:
+               bus.write_byte_data(HAT_ADDR, FAN_REG, 0x00)
+        except Exception as e:
+            log.error("Errore ventola: %s", e)
+
     with state_lock:
         state["fan_on"] = on
         state["fan_percentage"] = percentage if on else 0
     publish_fan_state()
+
 
 
 def apply_light(on: bool, effect_name: str):
@@ -389,17 +397,15 @@ def main_loop():
             auto_fan = state["auto_fan"]
         if auto_fan:
             if cpu_temp >= T_MAX_RANGE:
-                log.info("Setto apply_fan(True, 100)")
-                apply_fan(True, 100)
+                apply_fan(True)
             elif cpu_temp <= T_MIN_RANGE:
-                log.info("Setto apply_fan(False, 0)")
-                apply_fan(False, 0)
+                apply_fan(False)
         else:
             if cpu_temp >= T_MAX_RANGE:
                 with state_lock:
                     already_full = state["fan_on"] and state["fan_percentage"] == 100
                 if not already_full:
-                    apply_fan(True, 100)
+                    apply_fan(True)
 
         # Ciclo colori automatico (replica lo script originale): mentre la
         # ventola gira, cambia effetto RGB periodicamente.
