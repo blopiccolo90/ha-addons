@@ -68,7 +68,22 @@ RGB_EFFECT_REG = 0x04
 FAN_REG = 0x08
 RGB_OFF_REG = 0x07
 
-bus = SMBus(1)
+#bus = SMBus(1)
+
+from smbus2 import SMBus
+import os
+
+for bus_id in (1, 20, 21):
+    try:
+        if os.path.exists(f"/dev/i2c-{bus_id}"):
+            print(f"Uso I2C bus {bus_id}")
+            bus = SMBus(bus_id)
+            break
+    except Exception:
+        pass
+else:
+    raise RuntimeError("Nessun bus I2C disponibile")
+
 i2c_lock = threading.Lock()
 
 EFFECTS = {
