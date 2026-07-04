@@ -166,8 +166,6 @@ def update_oled(cpu_load, cpu_temp, ram_usage):
     pass
 
 def update_oled(cpu_load, cpu_temp, ram_usage):
-    if oled is None:
-        return
     try:
         draw.rectangle((0, 0, disp.width, disp.height), outline=0, fill=0)
         draw.text((0, -2), f"CPU:{cpu_load}%", font=font, fill=255)
