@@ -1,5 +1,4 @@
 paho-mqtt>=1.6,<2.0
 smbus2
 Pillow
-Adafruit-Blinka
-adafruit-circuitpython-ssd1306
+luma.oled
