@@ -1,0 +1,37 @@
+name: "RGB Hat Monitor"
+version: "1.0.0"
+slug: "rgb_hat_monitor"
+description: "Monitor OLED/Fan/RGB hat via MQTT (CPU, temp, RAM, UPS, fan, RGB LED)"
+url: "https://github.com/tuo-utente/rgb_hat_monitor"
+arch:
+  - aarch64
+  - armv7
+  - armhf
+init: false
+boot: auto
+startup: application
+host_network: true
+devices:
+  - /dev/i2c-1
+privileged:
+  - SYS_RAWIO
+options:
+  mqtt_host: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_user: ""
+  mqtt_password: ""
+  sleep_time: 60
+  t_min_range: 35
+  t_max_range: 65
+  ups_name: "tecnoware"
+  oled_enabled: true
+schema:
+  mqtt_host: "str"
+  mqtt_port: "port"
+  mqtt_user: "str"
+  mqtt_password: "password"
+  sleep_time: "int(5,3600)"
+  t_min_range: "int(0,100)"
+  t_max_range: "int(0,100)"
+  ups_name: "str"
+  oled_enabled: "bool"
