@@ -31,14 +31,7 @@ import time
 import paho.mqtt.client as mqtt
 from smbus2 import SMBus
 
-try:
-    from board import SCL, SDA
-    import busio
-    from PIL import Image, ImageDraw, ImageFont
-    import adafruit_ssd1306
-    OLED_AVAILABLE = True
-except Exception:
-    OLED_AVAILABLE = False
+OLED_AVAILABLE = False
 
 # --------------------------------------------------------------------------
 # Configurazione da variabili d'ambiente (impostate da run.sh dalle opzioni
@@ -168,30 +161,9 @@ def get_ram_usage() -> float:
     except Exception as e:
         log.error("Errore lettura RAM: %s", e)
         return 0.0
-
-
-
-# --------------------------------------------------------------------------
-# OLED (opzionale)
-# --------------------------------------------------------------------------
-oled = None
-if OLED_ENABLED and OLED_AVAILABLE:
-    try:
-        i2c = busio.I2C(SCL, SDA)
-        disp = adafruit_ssd1306.SSD1306_I2C(128, 32, i2c)
-        disp.fill(0)
-        disp.show()
-        image = Image.new("1", (disp.width, disp.height))
-        draw = ImageDraw.Draw(image)
-        font = ImageFont.truetype("DejaVuSans.ttf", 8)
-        font_small = ImageFont.truetype("DejaVuSans.ttf", 6)
-        oled = disp
-    except Exception as e:
-        log.error("OLED non disponibile: %s", e)
-        oled = None
-elif OLED_ENABLED and not OLED_AVAILABLE:
-    log.warning("Librerie OLED non installate: display disabilitato")
-
+      
+def update_oled(cpu_load, cpu_temp, ram_usage):
+    pass
 
 def update_oled(cpu_load, cpu_temp, ram_usage):
     if oled is None:
