@@ -11,7 +11,6 @@ RUN apk add --no-cache \
         jpeg-dev \
         zlib-dev \
         gcc \
-        musl-dev \
         python3-dev \
         linux-headers
 
